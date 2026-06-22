@@ -48,6 +48,9 @@ export class PointOfInterest {
   @Column({ name: 'is_verified', default: false })
   isVerified: boolean;
 
+  @Column({ type: 'text', nullable: true })
+  poster: string;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

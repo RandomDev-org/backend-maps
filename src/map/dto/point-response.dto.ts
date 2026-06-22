@@ -9,6 +9,7 @@ export class PointResponseDto {
   capacity: number | null;
   type: string;
   isVerified: boolean;
+  poster: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
