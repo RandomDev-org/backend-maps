@@ -22,6 +22,7 @@ interface SpatialRow {
   capacity: number | null;
   type: string;
   is_verified: boolean;
+  poster: string | null;
   distance: string | null;
   music_genres: unknown;
   created_at: Date;
@@ -108,7 +109,7 @@ export class MapService {
           poi.id, poi.name, poi.description,
           ST_X(poi.location::geometry) AS lng,
           ST_Y(poi.location::geometry) AS lat,
-          poi.address, poi.phone, poi.capacity, poi.type, poi.is_verified,
+          poi.address, poi.phone, poi.capacity, poi.type, poi.is_verified, poi.poster,
           ST_Distance(poi.location, ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography) AS distance,
           poi.created_at, poi.updated_at,
           COALESCE(ARRAY_AGG(DISTINCT e.music_genre) FILTER (WHERE e.music_genre IS NOT NULL), '{}') AS music_genres
@@ -133,7 +134,7 @@ export class MapService {
           poi.id, poi.name, poi.description,
           ST_X(poi.location::geometry) AS lng,
           ST_Y(poi.location::geometry) AS lat,
-          poi.address, poi.phone, poi.capacity, poi.type, poi.is_verified,
+          poi.address, poi.phone, poi.capacity, poi.type, poi.is_verified, poi.poster,
           poi.created_at, poi.updated_at,
           COALESCE(ARRAY_AGG(DISTINCT e.music_genre) FILTER (WHERE e.music_genre IS NOT NULL), '{}') AS music_genres
         FROM points_of_interest poi
@@ -186,6 +187,7 @@ export class MapService {
       capacity: point.capacity,
       type: point.type,
       isVerified: point.isVerified,
+      poster: point.poster ?? null,
       createdAt: point.createdAt,
       updatedAt: point.updatedAt,
     };
@@ -209,6 +211,7 @@ export class MapService {
       capacity: row.capacity,
       type: row.type,
       isVerified: row.is_verified,
+      poster: row.poster ?? null,
       musicGenres,
       distance: row.distance ? parseFloat(row.distance) : undefined,
       createdAt: row.created_at,
