@@ -10,6 +10,7 @@ export interface SpatialPoint {
   type: string;
   isVerified: boolean;
   distance?: number;
+  musicGenres: string[];
   createdAt: Date;
   updatedAt: Date;
 }

@@ -23,6 +23,7 @@ interface SpatialRow {
   type: string;
   is_verified: boolean;
   distance: string | null;
+  music_genres: unknown;
   created_at: Date;
   updated_at: Date;
 }
@@ -104,14 +105,17 @@ export class MapService {
     const rows: SpatialRow[] = await this.dataSource.query(
       `
         SELECT
-          id, name, description,
-          ST_X(location::geometry) AS lng,
-          ST_Y(location::geometry) AS lat,
-          address, phone, capacity, type, is_verified,
-          ST_Distance(location, ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography) AS distance,
-          created_at, updated_at
-        FROM points_of_interest
-        WHERE ST_DWithin(location, ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography, $3)
+          poi.id, poi.name, poi.description,
+          ST_X(poi.location::geometry) AS lng,
+          ST_Y(poi.location::geometry) AS lat,
+          poi.address, poi.phone, poi.capacity, poi.type, poi.is_verified,
+          ST_Distance(poi.location, ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography) AS distance,
+          poi.created_at, poi.updated_at,
+          COALESCE(ARRAY_AGG(DISTINCT e.music_genre) FILTER (WHERE e.music_genre IS NOT NULL), '{}') AS music_genres
+        FROM points_of_interest poi
+        LEFT JOIN events e ON e.point_id = poi.id
+        WHERE ST_DWithin(poi.location, ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography, $3)
+        GROUP BY poi.id
         ORDER BY distance ASC
       `,
       [lng, lat, radius],
@@ -126,13 +130,16 @@ export class MapService {
     const rows: SpatialRow[] = await this.dataSource.query(
       `
         SELECT
-          id, name, description,
-          ST_X(location::geometry) AS lng,
-          ST_Y(location::geometry) AS lat,
-          address, phone, capacity, type, is_verified,
-          created_at, updated_at
-        FROM points_of_interest
-        WHERE location && ST_SetSRID(ST_MakeEnvelope($1, $2, $3, $4), 4326)
+          poi.id, poi.name, poi.description,
+          ST_X(poi.location::geometry) AS lng,
+          ST_Y(poi.location::geometry) AS lat,
+          poi.address, poi.phone, poi.capacity, poi.type, poi.is_verified,
+          poi.created_at, poi.updated_at,
+          COALESCE(ARRAY_AGG(DISTINCT e.music_genre) FILTER (WHERE e.music_genre IS NOT NULL), '{}') AS music_genres
+        FROM points_of_interest poi
+        LEFT JOIN events e ON e.point_id = poi.id
+        WHERE poi.location && ST_SetSRID(ST_MakeEnvelope($1, $2, $3, $4), 4326)
+        GROUP BY poi.id
       `,
       [swLng, swLat, neLng, neLat],
     );
@@ -185,6 +192,12 @@ export class MapService {
   }
 
   private toSpatialDto(row: SpatialRow): SpatialPoint {
+    const raw = row.music_genres;
+    const musicGenres: string[] =
+      Array.isArray(raw) ? raw :
+      typeof raw === 'string' && raw !== '{}'
+        ? raw.slice(1, -1).split(',').filter(Boolean)
+        : [];
     return {
       id: row.id,
       name: row.name,
@@ -196,6 +209,7 @@ export class MapService {
       capacity: row.capacity,
       type: row.type,
       isVerified: row.is_verified,
+      musicGenres,
       distance: row.distance ? parseFloat(row.distance) : undefined,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
