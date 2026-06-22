@@ -9,6 +9,7 @@ export interface SpatialPoint {
   capacity: number | null;
   type: string;
   isVerified: boolean;
+  poster: string | null;
   distance?: number;
   createdAt: Date;
   updatedAt: Date;
