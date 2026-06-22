@@ -56,7 +56,7 @@ export class Event {
   @Column({ name: 'available_capacity', type: 'int', nullable: true })
   availableCapacity: number;
 
-  @Column({ length: 500, nullable: true })
+  @Column({ type: 'text', nullable: true })
   poster: string;
 
   @Column({ default: false })
