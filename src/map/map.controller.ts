@@ -3,6 +3,7 @@ import { MessagePattern, Payload } from '@nestjs/microservices';
 import { MapService } from './map.service';
 import { CreatePointDto } from './dto/create-point.dto';
 import { UpdatePointDto } from './dto/update-point.dto';
+import { CreateEventDto } from './dto/create-event.dto';
 import { QueryNearbyDto } from './dto/query-nearby.dto';
 import { QueryBoundsDto } from './dto/query-bounds.dto';
 
@@ -43,5 +44,25 @@ export class MapController {
   @MessagePattern({ cmd: 'map.findByBounds' })
   findByBounds(@Payload() query: QueryBoundsDto) {
     return this.mapService.findByBounds(query);
+  }
+
+  @MessagePattern({ cmd: 'event.create' })
+  createEvent(@Payload() dto: CreateEventDto) {
+    return this.mapService.createEvent(dto);
+  }
+
+  @MessagePattern({ cmd: 'event.findAll' })
+  findAllEvents() {
+    return this.mapService.findAllEvents();
+  }
+
+  @MessagePattern({ cmd: 'event.findByPoint' })
+  findEventsByPoint(@Payload() { pointId }: { pointId: string }) {
+    return this.mapService.findEventsByPoint(pointId);
+  }
+
+  @MessagePattern({ cmd: 'event.remove' })
+  removeEvent(@Payload() { id }: { id: string }) {
+    return this.mapService.removeEvent(id);
   }
 }
