@@ -2,8 +2,10 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { PointOfInterest } from './entities/point-of-interest.entity';
+import { Event } from './entities/event.entity';
 import { CreatePointDto } from './dto/create-point.dto';
 import { UpdatePointDto } from './dto/update-point.dto';
+import { CreateEventDto } from './dto/create-event.dto';
 import { QueryNearbyDto } from './dto/query-nearby.dto';
 import { QueryBoundsDto } from './dto/query-bounds.dto';
 import { PointResponseDto } from './dto/point-response.dto';
@@ -30,6 +32,8 @@ export class MapService {
   constructor(
     @InjectRepository(PointOfInterest)
     private readonly pointRepo: Repository<PointOfInterest>,
+    @InjectRepository(Event)
+    private readonly eventRepo: Repository<Event>,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -134,6 +138,32 @@ export class MapService {
     );
 
     return rows.map((row) => this.toSpatialDto(row));
+  }
+
+  async createEvent(dto: CreateEventDto) {
+    const point = await this.pointRepo.findOneBy({ id: dto.pointId });
+    if (!point) throw new NotFoundException(`Point ${dto.pointId} not found`);
+    const event = this.eventRepo.create(dto);
+    return this.eventRepo.save(event);
+  }
+
+  async findAllEvents() {
+    return this.eventRepo.find({
+      order: { date: 'DESC' },
+      relations: { point: true },
+    });
+  }
+
+  async findEventsByPoint(pointId: string) {
+    return this.eventRepo.find({
+      where: { pointId },
+      order: { date: 'DESC' },
+    });
+  }
+
+  async removeEvent(id: string) {
+    const result = await this.eventRepo.delete(id);
+    if (result.affected === 0) throw new NotFoundException(`Event ${id} not found`);
   }
 
   private toResponseDto(point: PointOfInterest): PointResponseDto {
