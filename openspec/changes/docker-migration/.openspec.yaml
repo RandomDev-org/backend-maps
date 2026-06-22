@@ -1,0 +1,11 @@
+schema: spec-driven
+created: 2026-06-22
+proposal: |
+  Migrar backend-maps a Docker para entorno reproducible.
+  Se agrega Dockerfile optimizado (multi-stage) y .dockerignore.
+tasks:
+  - feat: add Dockerfile for NestJS TCP microservice
+  - feat: add .dockerignore
+specs:
+  - Docker image must build with prod dependencies only (no devDependencies)
+  - Container must listen on TCP port 3001
