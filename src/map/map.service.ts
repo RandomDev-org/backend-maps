@@ -22,6 +22,7 @@ interface SpatialRow {
   capacity: number | null;
   type: string;
   is_verified: boolean;
+  poster: string | null;
   distance: string | null;
   created_at: Date;
   updated_at: Date;
@@ -50,6 +51,7 @@ export class MapService {
       capacity: dto.capacity,
       type: dto.type,
       isVerified: dto.isVerified ?? false,
+      poster: dto.poster,
     });
 
     const saved = await this.pointRepo.save(point);
@@ -87,6 +89,7 @@ export class MapService {
     if (dto.capacity !== undefined) point.capacity = dto.capacity;
     if (dto.type !== undefined) point.type = dto.type;
     if (dto.isVerified !== undefined) point.isVerified = dto.isVerified;
+    if (dto.poster !== undefined) point.poster = dto.poster;
 
     const saved = await this.pointRepo.save(point);
     return this.toResponseDto(saved);
@@ -107,7 +110,7 @@ export class MapService {
           id, name, description,
           ST_X(location::geometry) AS lng,
           ST_Y(location::geometry) AS lat,
-          address, phone, capacity, type, is_verified,
+          address, phone, capacity, type, is_verified, poster,
           ST_Distance(location, ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography) AS distance,
           created_at, updated_at
         FROM points_of_interest
@@ -129,7 +132,7 @@ export class MapService {
           id, name, description,
           ST_X(location::geometry) AS lng,
           ST_Y(location::geometry) AS lat,
-          address, phone, capacity, type, is_verified,
+          address, phone, capacity, type, is_verified, poster,
           created_at, updated_at
         FROM points_of_interest
         WHERE location && ST_SetSRID(ST_MakeEnvelope($1, $2, $3, $4), 4326)
@@ -179,6 +182,7 @@ export class MapService {
       capacity: point.capacity,
       type: point.type,
       isVerified: point.isVerified,
+      poster: point.poster ?? null,
       createdAt: point.createdAt,
       updatedAt: point.updatedAt,
     };
@@ -196,6 +200,7 @@ export class MapService {
       capacity: row.capacity,
       type: row.type,
       isVerified: row.is_verified,
+      poster: row.poster ?? null,
       distance: row.distance ? parseFloat(row.distance) : undefined,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
